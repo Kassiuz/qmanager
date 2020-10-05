@@ -86,6 +86,12 @@ each should return their own type of message and as you can see we already have 
 
 now to commit the results we repeat some of the steps we used initially:
 
+`git add *` to add all files, this is not the best way to add files we should target specifics to avoid config or temp files that are not in our gitignore, but for educational purposes let's use this.
 
+`git commit -m "<Desired Message>"` to save changes to local history
 
-mvn commit -m "Step 3: We created a REST controller and viewed the responses"
+`git push` to send our changes upstream to the remote repository
+
+###conclusion
+
+So now we know how to add a dependency, how to create a controller and how to commit and push our changes to an updatream repository.
