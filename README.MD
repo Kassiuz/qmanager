@@ -6,6 +6,64 @@ Text between < > means a variable and should be replaced with whatever the text 
 #Step 1
 The first step is to create a project in the Spring intializr with nothing added
 
+###Step Conclusion
+For this step you might want to take a look into the pom.xml. At this point it might be a bit above your head if you are just getting started but still it would help to get familiar with the structure. So here is a small breakdown
+
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>2.3.4.RELEASE</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.training.questionaire</groupId>
+	<artifactId>qmanager</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>qmanager</name>
+	<description>Training project</description>
+
+	<properties>
+		<java.version>11</java.version>
+	</properties>
+	
+The modelVersion tag for maven 2 and 3 needs to stay at four as those versions of maven do nto support another model version. The model version tells your POM what model descriptor project it conforms to. Though currently we only use 4 this allows for if ever the model moves to a newer version there is still ways to determine which other versions are available and used in a specific pom.
+
+the parent tag tells maven that before processing this pom it should read the pom related to the parent tag and merge it with this one, once that's done maven generates what is known as an effective pom, which is the actual pom used to process your build. Parents help unify information common to many projects instead of having each project go through the work  (and risk) of setting up versions and so on.
+
+next come the groupId,artifactId,version,name and description tags (the ones at the same level as the paren tag not the children of the paren tag) this is your projects information as far as maven is concerned.  groupId is usually the inverted domain of your company or project with a little something else to identify what group of projects this artifact belongs to in case you have many. Let's say you have a questionnare project and a reservations project and your domain is training.com your groupId for questionnaire might look something like `com.training.api.questionnare` and for your reservations it would look something like `com.training.api.reservations`
+
+artifactId is the specific identifier of the project related to this pom. Suppose you are building a microservice-like arquitecture for your questionnare service you will have several artifacts for this project so  your artifacts might end up with names like `questionsQueryEngine` and `questionsCRUDEngine` and so on. So now having a group makes more sense as not a single artifact may be related to it.
+
+the version tag is pretty self explanatory. It helps keep track of every released version of your artifact so if someone else is using it they can control what code and functionality they are getting.
+
+the name is the recognizable name of your artifact and the description is a text to help people realize what your artifact does.
+
+the properties sections defined variables for this pom.xml, in this case we have a java.version variable that can be referenced in other parts of this pom by using ${java.version} and it will get replaced on build time.
+
+Next come the dependencies section:
+
+        <dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.junit.vintage</groupId>
+					<artifactId>junit-vintage-engine</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		
+This is what a single dependency looks like. The dependency tag limits the info of a single dependency and then come it's maven descriptors which we already reviewed.
+
+
+this dependency has a set of tags that do not need to be included such as the scope and exclusions tags.
+
+the scope tells maven that it should use it for a specific moment in the build process. Here for example it is being told to use it only when the app is running tests and thus will not be added to our final Jar/war file once the project is built.
+
+the exclusions tag groups exclusion tags and is a list of dependencies that you do not want to have added to your project via the dependency in which they are in. Think of it this way you need to use a dependency called `questionData` which helps in handling database acces to question repositories, but that dependency in its pom declares that it needs `questionModel` which you already need because you are doing a lot of stuff with questions, so instead of letting `questionData` handle the version and import of that dependency you tell maven to ignore that declaration inside `QuestionData` and add your own dependency for `QuestionModel` on your pom.
+
+and thats basically it for the pom, there are a bunch of tags more that you can add to customize build process and handle additional functionalities, but we will cover them as we come to them.
 #Step 2
 Next we are going to add it to the repository using the following commands
 
@@ -26,6 +84,9 @@ at the project root:
 ###5.- send the changes to the remote repository
 `git push -u <repository> <branch>` finally this line sends the changes to the remote (origin in our case) repository. Once a push is completed the rest of the team accessing this repository will be able to see the changes and the history of the branch is now updated for everyone.
 
+###Step Conclusion
+Each steps here is described but it important to note that git has a wide-ranged functionality extending beyond this. Though we might not see it in this course it is worth taking a look at some of the more prominent features as GIT is a great tool to handle projects with a large team and quick update needs.
+
 #Step 3
 In this step we are going to create a simple rest controller that will receive a GET HTTP Request. The hello world for this project if you will.
 
@@ -44,7 +105,7 @@ Add the required dependencies so spring boot can recognize components annotated 
  ###2.- Annotate the controller class
  Next we will create a class in the package `com.training.questionaire.qmanager.web.rest` the class will be named `HelloWorldRestController`. Here notices two things, the all lower case usage for packages and the Camel case used for Classes, this is Java Convention and though it might be good practice for a training project take into accoun that each corporation might use specific naming convetions that should be followed.
  
- this class will be annotated with the `@Controller` annotation that will ensure Spring Web recognizes this class as a request handler and will try to match any URL to it's annotated methods. At the level class we will also use this annotation `@RequestMapping("< base URL mapping >")` this will append the prefix we add here to all mapping we add at method level, in this case I have added `qmanager`.
+ this class will be annotated with the `@RestController` annotation that will ensure Spring Web recognizes this class as a request handler and will try to match any URL to it's annotated methods. At the level class we will also use this annotation `@RequestMapping("< base URL mapping >")` this will append the prefix we add here to all mapping we add at method level, in this case I have added `qmanager`.
  
  ###3.- add a handler method for the hello world functionality
  We now need to add a method to return a simple text. We will start Using Response Entity so we can handle http response codes together with body content so use this definition:
@@ -92,6 +153,61 @@ now to commit the results we repeat some of the steps we used initially:
 
 `git push` to send our changes upstream to the remote repository
 
-###conclusion
+###Step Conclusion
 
 So now we know how to add a dependency, how to create a controller and how to commit and push our changes to an updatream repository.
+
+Things to keep an eye on this step are the @RestController usage. This annotation sets up a class with both the @Controller and the @ResponseBody annotations. @Controller is a specialization of the@Component annotation and allows Spring to recognize a class so it can be handled by the spring context. the @ResponseBody has amore practical use, as instead of looking in the response for a view that matches it it will turn the body of the response into the serialization of any object returned from the method that is annotated. 
+
+Also keep an eye on the @GetMapping comes in to replace @RequestMapping, where @RequestMapping would have asked for a list of all allowed methods we can now tell the method what http request method it will answer and all other will be rejected, in this case we are using a GET, if we added to this annotationa produces parameter we could make it return XML instead of JSON. if you want to try it just know that to make sure a method returns a JSON we would make the annotation look something like this:
+
+`@GetMapping(value="/helloWorldComplex", produces = MediaType.JSON)`
+
+I would recommend you try to make the helloWorldComplex return various types so you can see what happens with the output and get familiar with the effects of the @GetMapping
+
+#Step 4
+
+Now that we have a simple way to communicate through HTTP with a JAVA application it would be nice to have a more specialized message come to us so in this step we will create a Post Method and have it return to us a custom message with our name or whatever text we feed it. So let's start by adding a method marked with a `@PostMapping` and url `/TellMeHello`, something like this:
+
+    @PostMapping(value="/tellMeHello")
+    public ResponseEntity<ExampleResponse> tellMeHelloHandlerJSONtoXML(@RequestBody TellMeHelloRequest request){
+        ExampleResponse response= new ExampleResponse();
+        response.setMessageKey("qmanager.message.hello-world."+request.getUsername()+"."+request.getAge());
+        response.setValue(200);
+        response.setUser(request.getUsername());
+        return ResponseEntity.ok().body(response);
+    }
+
+There are two main changes to our other endpoint here, one is the `@PostMapping` which we already know follows the structure of other mappers, and it simply telling us that the url defined can only be accessed by post http methods.
+
+but we also added the @RequestBody to the parameter of the method. What this is telling it is that in the request body it might find properties that match those of the class of the parameter and should it find them it needs to create an object with those values assigned. Otherwise it will provided a non-null object with null values.
+
+
+Once done we can launch our app with the same command as before:
+
+`mvn spring-boot:run`
+
+Once it's up and running use a Rest Client such as boomerang or postman and send a request to this url:
+
+`http://localhost:8080/qmanager/tellMeHello`
+
+remember to change the request type to post if you send  a GET you should be getting a 405 status which means you tried to acces a URL in a way which was not allowed for that endpoint. The body of your request should look something like this:
+
+`{
+    "username": "Johnny",
+    "age": 19
+}`
+
+send it and you should probably get a 415 error which is an Unsupported Media Type status code. Meaning though the formatting of your request was correct you told the endpoint you were sending plain text and it does not know how to handle plain text. so you will need to set your header `Content-type` to `application/json` so that the endpoint knows that the content of the request is in a json format and can parse it into an object for our handling. re-send the request and you should get the expected response in something like this:
+
+`{
+    "messageKey": "qmanager.message.hello-world.Johnny.19",
+    "value": 200,
+    "user": "Johnny"
+}`
+
+in the request change the case of any letter of the field names (username and age) and watch how the response now includes a null value. Jackson does not expect the body to match exactly with the object being expected it simply expects the property name of the object to match with those of the request body if it does not it leaves them as null.
+ 
+###Step Conclusion
+
+Now we know not only how to send back a dumb response but actually receive data from the client. Though we haven't really accessed the full capabilities of an app to be interacted with we have now determined that we can desn complex data structures and receive them as objects on the server side to be handled normally and without further complication thanks to letting Spring boot handle conversion. Also Spring boot already limits call methods and content types to be received so we no longer have to worry about validating each end-point against certain type of requests.
