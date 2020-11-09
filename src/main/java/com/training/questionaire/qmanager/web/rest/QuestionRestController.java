@@ -17,39 +17,44 @@ public class QuestionRestController {
     @GetMapping("/testQuestions")
     public ResponseEntity<Map<String,Object>> sayHelloWorld(){
         Map<String,Object> result = new HashMap<>();
-        List<Question> questionList = new ArrayList<>();
-        Question repeatedQuestion = new Question();
-        repeatedQuestion.setId(0L);
-        repeatedQuestion.setQuestion("Some new question");
-        repeatedQuestion.setResponse("some new Response");
-        repeatedQuestion.setLevel("new Level");
-        repeatedQuestion.setSeniority("new Seniortiy");
-        repeatedQuestion.setSubject("new subject");
+        Question repeatedQuestion = createQuestion(0L,"Some new question","some new Response",
+                "new Level","new Seniortiy","new subject");
+        List<Question> questionList = createQuestionList(7);
         questionList.add(repeatedQuestion);
-        for(long i=0; i<7;i++){
-            Question newQuestion = new Question();
-            newQuestion.setId(i);
-            newQuestion.setQuestion("Some question");
-            newQuestion.setResponse("some Response");
-            newQuestion.setLevel("Level");
-            newQuestion.setSeniority("Seniortiy");
-            newQuestion.setSubject("subject");
-            questionList.add(newQuestion);
-        }
         result.put("List",questionList);
-        Set<Question> questionSet = new HashSet<>();
+        Set<Question> questionSet = createQuestionSet(7);
         questionSet.add(repeatedQuestion);
-        for(long i=0; i<7;i++){
-            Question newQuestion = new Question();
-            newQuestion.setId(i);
-            newQuestion.setQuestion("Some question");
-            newQuestion.setResponse("some Response");
-            newQuestion.setLevel("Level");
-            newQuestion.setSeniority("Seniortiy");
-            newQuestion.setSubject("subject");
-            questionSet.add(newQuestion);
-        }
         result.put("Set",questionSet);
         return ResponseEntity.ok().body(result);
+    }
+
+    private List<Question> createQuestionList(long size){
+        Collection<Question> questions = createQuestionCollection(size,false);
+        return (List)questions;
+    }
+
+    private Set<Question> createQuestionSet(long size){
+        Collection<Question> questions = createQuestionCollection(size,true);
+        return (Set)questions;
+    }
+
+    private Collection<Question> createQuestionCollection(long size, boolean isSet){
+        List<Question> questions = new ArrayList();
+        for(long i=0; i<size;i++){
+            questions.add(createQuestion(i,"Some question","some Response","Level",
+                    "Seniortiy","subject"));
+        }
+        return isSet?new HashSet<>(questions):questions;
+    }
+
+    private Question createQuestion(Long id,String question, String response, String level, String seniority, String subject){
+        Question newQuestion = new Question();
+        newQuestion.setId(id);
+        newQuestion.setQuestion(question);
+        newQuestion.setResponse(response);
+        newQuestion.setLevel(level);
+        newQuestion.setSeniority(seniority);
+        newQuestion.setSubject(subject);
+        return newQuestion;
     }
 }

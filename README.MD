@@ -466,4 +466,6 @@ Is the code readable?(that is to say it is easy to identify what is happening an
 2.- Change at what point in your code is your repated Question added to the set and see if it affects the output. 
     
     
+###About The Suggested Solution
 
+The suggested Solution still has issues but it cuts down on the code length and makes methods reusable for other implememntations we might need. in the next step we will attempt to address some of this issues and work our way out of them while we provide our first CRUD controller.
