@@ -3,7 +3,7 @@ to understand this read me take into account this was a small class designed for
 
 Text between < > means a variable and should be replaced with whatever the text describes.
 
-#Step 1
+#Step 1 creating a project in spring intializr
 The first step is to create a project in the Spring intializr with nothing added
 
 ###Step Conclusion
@@ -64,7 +64,7 @@ the scope tells maven that it should use it for a specific moment in the build p
 the exclusions tag groups exclusion tags and is a list of dependencies that you do not want to have added to your project via the dependency in which they are in. Think of it this way you need to use a dependency called `questionData` which helps in handling database acces to question repositories, but that dependency in its pom declares that it needs `questionModel` which you already need because you are doing a lot of stuff with questions, so instead of letting `questionData` handle the version and import of that dependency you tell maven to ignore that declaration inside `QuestionData` and add your own dependency for `QuestionModel` on your pom.
 
 and thats basically it for the pom, there are a bunch of tags more that you can add to customize build process and handle additional functionalities, but we will cover them as we come to them.
-#Step 2
+#Step 2 create a GIT repository to handle versioning
 Next we are going to add it to the repository using the following commands
 
 at the project root:
@@ -87,7 +87,7 @@ at the project root:
 ###Step Conclusion
 Each steps here is described but it important to note that git has a wide-ranged functionality extending beyond this. Though we might not see it in this course it is worth taking a look at some of the more prominent features as GIT is a great tool to handle projects with a large team and quick update needs.
 
-#Step 3
+#Step 3 creatinga  simple REST API
 In this step we are going to create a simple rest controller that will receive a GET HTTP Request. The hello world for this project if you will.
 
 ###1.- Add the dependecies to the pom.xml
@@ -165,7 +165,7 @@ Also keep an eye on the @GetMapping comes in to replace @RequestMapping, where @
 
 I would recommend you try to make the helloWorldComplex return various types so you can see what happens with the output and get familiar with the effects of the @GetMapping
 
-#Step 4
+#Step 4 - Sending data to the BackEnd
 
 Now that we have a simple way to communicate through HTTP with a JAVA application it would be nice to have a more specialized message come to us so in this step we will create a Post Method and have it return to us a custom message with our name or whatever text we feed it. So let's start by adding a method marked with a `@PostMapping` and url `/TellMeHello`, something like this:
 
@@ -211,3 +211,259 @@ in the request change the case of any letter of the field names (username and ag
 ###Step Conclusion
 
 Now we know not only how to send back a dumb response but actually receive data from the client. Though we haven't really accessed the full capabilities of an app to be interacted with we have now determined that we can desn complex data structures and receive them as objects on the server side to be handled normally and without further complication thanks to letting Spring boot handle conversion. Also Spring boot already limits call methods and content types to be received so we no longer have to worry about validating each end-point against certain type of requests.
+
+#Step 5 - Creating a POJO(Plain Old Java Object) and testing the importance of the equals and hashCode methods.
+
+Now that we have a way to receive data via http it is important to begin separating responsabilities so each component and layer can have behaviors related only to the layer it corresponds to and also to allow layers to be easily dettached from one another. For this we will forgo the previous code and create a new structure that begins to ressemble a business necessity.
+
+First let's create a question Object which will have an id, a question, response, subject, seniority and level. for now the identifier will be a long and the others a String. Don't forget to add getters and setters.
+
+Once you have that implemented let's implement the hashcode and equals method. Now this is important because it helps all the JAVA API better determine what objects are equal, how their equality is determined and helps improve the way collections and other comparisons handle our custom Objects. Now implementing them can be very simple as there is no real enforcing, this of course does not mean that we should do our implementation with no thought and here is why:
+
+-All objects who are qual must return the same haschode
+
+-If objects have the same hashcode they can be equal but do not Have to be
+
+-Unequal objects can return the same hashcode.
+
+the last one of course though valid doesn't necessarily come recommended as two unequal objects returning the same hashcode will cause a drop in performance.
+
+here is a little visual example:
+
+__________________
+1| A,D,E,F
+__________________
+__________________
+2| B,H
+__________________
+__________________
+3| C,G
+__________________
+
+The starting number in each row before the pipe represents the hashcode that object has, each letter is an object. Now Let's say I wanted to know if my collection (which is composed of the 3 rows) contains A, what would happen is that it's hashcode would be checked and since it's 1 it's equals method would be run against all elements in the 1 row. This way Java avoids comparing it against all elements in the collection. With this in mind we can design our hashcode and equals method.
+
+-We can only use fields which won't constantly be changing.
+
+-Every field we use in the hashcode should be used in the equals to ensure they both match up.
+
+now taking into account our problem requires we create questions for a questionnaire, I suggest we use the identifier though the question itself defines it questions are made of multiple words and similar questions may exist also questions will probably change due to typos but for the moment let's assume that instead of changing a question due to typo we simply destroy it and create a new one. So with this knowledge our hashcode would look something like this:
+
+
+      @Override
+        public int hashCode() {
+            return Objects.hash(getId());
+       }
+
+
+our equals now must match our hashCode so when comparng questions we should check their id. Let's build our equals method
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Question)) return false;
+            Question question = (Question) o;
+            return getId() == question.getId();
+        }
+
+Let's break down the equals method. First as you can see it receivesa parameter of type Object, this instantly removes primitive types from the possibility of being compared (exclusing boxing and unboxing which we will review later).
+
+next the equals method uses the operator _instanceof_ this operator checks that the object referenced by the parameters is in fact an object of type question. Here I'll stop to review a nomenclature which I'll be using throughout the rest of the course. when we declare a variable such as "Object createdObject = new Question()" we end up with two things in our hands. The variable createdObject which is a reference of type Object and the actual object of type question. So createdObject is just a pointer who will allow itself to be pinted to any object as long as that object extends from class Object at some point. In the delcaration we are initially pointing it to a Question type Object and since the Object Class is the parent of all Objects there is no issue. But say you wanted to do something like this "Question createdObject = new Object()". This will instantly raise a compiler issue, for though all questions are objects not all objects are questions. And with that we wrap up our crash course on what is a variable/reference and what is an object.
+
+By the third line the equals method is doing a cast of the parameter into a Question Object. What a cast does is it gets the object from a refrence and puts it into a reference of the type referred to inside the parenthesis. This allows us to access the methods specific to the class we casted to. Though comfortable if this is done without a instanceof check the runtime will launch an exception as the attempted cast has no way of converting the original object to the provided reference type.
+
+thats it for pecularities in the equals method. The logic goes something like this:
+
+    if the received object is of type question 
+        then 
+            if the received parameter's id is the same as this objects id 
+                return true. 
+            For all other caes return false
+            
+so now let's make some excercises. Let's create a list and a set of questions of questions. Then we will add a question with the same id to both the list and the question. This should happen in a new controller as it handles a different type of business object. Here is the sample code:
+
+        public ResponseEntity<Map<String,Object>> sayHelloWorld(){
+            Map<String,Object> result = new HashMap<>();
+            List<Question> questionList = new ArrayList<>();
+            Question repeatedQuestion = new Question();
+            repeatedQuestion.setId(0L);
+            repeatedQuestion.setQuestion("Some new question");
+            repeatedQuestion.setResponse("some new Response");
+            repeatedQuestion.setLevel("new Level");
+            repeatedQuestion.setSeniority("new Seniortiy");
+            repeatedQuestion.setSubject("new subject");
+            questionList.add(repeatedQuestion);
+            for(long i=0; i<7;i++){
+                Question newQuestion = new Question();
+                newQuestion.setId(i);
+                newQuestion.setQuestion("Some question");
+                newQuestion.setResponse("some Response");
+                newQuestion.setLevel("Level");
+                newQuestion.setSeniority("Seniortiy");
+                newQuestion.setSubject("subject");
+                questionList.add(newQuestion);
+            }
+            result.put("List",questionList);
+            Set<Question> questionSet = new HashSet<>();
+            questionSet.add(repeatedQuestion);
+            for(long i=0; i<7;i++){
+                Question newQuestion = new Question();
+                newQuestion.setId(i);
+                newQuestion.setQuestion("Some question");
+                newQuestion.setResponse("some Response");
+                newQuestion.setLevel("Level");
+                newQuestion.setSeniority("Seniortiy");
+                newQuestion.setSubject("subject");
+                questionSet.add(newQuestion);
+            }
+            result.put("Set",questionSet);
+            return ResponseEntity.ok().body(result);
+        }
+        
+ There are a lot of things wrong with that code but for now let's assume thats exactly what we wanted to do. Once you run the app and access the url you should get a result similar to this:
+ 
+    {
+        "Set": [
+            {
+                "id": 1,
+                "question": "Some question",
+                "response": "some Response",
+                "subject": "subject",
+                "seniority": "Seniortiy",
+                "level": "Level"
+            },
+            {
+                "id": 2,
+                "question": "Some question",
+                "response": "some Response",
+                "subject": "subject",
+                "seniority": "Seniortiy",
+                "level": "Level"
+            },
+            {
+                "id": 3,
+                "question": "Some question",
+                "response": "some Response",
+                "subject": "subject",
+                "seniority": "Seniortiy",
+                "level": "Level"
+            },
+            {
+                "id": 4,
+                "question": "Some question",
+                "response": "some Response",
+                "subject": "subject",
+                "seniority": "Seniortiy",
+                "level": "Level"
+            },
+            {
+                "id": 5,
+                "question": "Some question",
+                "response": "some Response",
+                "subject": "subject",
+                "seniority": "Seniortiy",
+                "level": "Level"
+            },
+            {
+                "id": 6,
+                "question": "Some question",
+                "response": "some Response",
+                "subject": "subject",
+                "seniority": "Seniortiy",
+                "level": "Level"
+            },
+            {
+                "id": 0,
+                "question": "Some new question",
+                "response": "some new Response",
+                "subject": "new subject",
+                "seniority": "new Seniortiy",
+                "level": "new Level"
+            }
+        ],
+        "List": [
+            {
+                "id": 0,
+                "question": "Some new question",
+                "response": "some new Response",
+                "subject": "new subject",
+                "seniority": "new Seniortiy",
+                "level": "new Level"
+            },
+            {
+                "id": 0,
+                "question": "Some question",
+                "response": "some Response",
+                "subject": "subject",
+                "seniority": "Seniortiy",
+                "level": "Level"
+            },
+            {
+                "id": 1,
+                "question": "Some question",
+                "response": "some Response",
+                "subject": "subject",
+                "seniority": "Seniortiy",
+                "level": "Level"
+            },
+            {
+                "id": 2,
+                "question": "Some question",
+                "response": "some Response",
+                "subject": "subject",
+                "seniority": "Seniortiy",
+                "level": "Level"
+            },
+            {
+                "id": 3,
+                "question": "Some question",
+                "response": "some Response",
+                "subject": "subject",
+                "seniority": "Seniortiy",
+                "level": "Level"
+            },
+            {
+                "id": 4,
+                "question": "Some question",
+                "response": "some Response",
+                "subject": "subject",
+                "seniority": "Seniortiy",
+                "level": "Level"
+            },
+            {
+                "id": 5,
+                "question": "Some question",
+                "response": "some Response",
+                "subject": "subject",
+                "seniority": "Seniortiy",
+                "level": "Level"
+            },
+            {
+                "id": 6,
+                "question": "Some question",
+                "response": "some Response",
+                "subject": "subject",
+                "seniority": "Seniortiy",
+                "level": "Level"
+            }
+        ]
+    }
+
+See how on the list object you have two questions with ID 0 and on the Set you only have the "repeatedquestion" values. This is because lists do not check objects for uniqueness and sets require that each object in them be unique. Though we will not go into the deep end of collections for this step suffice it to know that each collection serves a purpose and as comfortable as using arrays or lists might be you should always look to use the collection that best matches your needs.
+
+##Excercise
+
+Lets do a couple of changes to our existing code to make sure it looks as best as possible and is as reusable as possible.
+Try to answer a couple of questions when doing refactors, such as:
+    
+Is the code repeated? if so, what hardcoded values turned into parameters would allow me to make the repeated code a mehod?
+
+Can this be used further down the road? if not, what would I need to change to make it so.
+
+Is the code readable?(that is to say it is easy to identify what is happening and fits in a single screen)
+
+1.- Refactor the code to make it as compact as possible without using method stringing.
+
+2.- Change at what point in your code is your repated Question added to the set and see if it affects the output. 
+    
+    
+
